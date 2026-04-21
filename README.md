@@ -32,3 +32,17 @@ This application predicts sales probability based on pricing, marketing, discoun
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
+```
+
+## 🌐 Use Case
+Small Business Sales Analysis
+E-commerce Pricing Strategy
+Marketing Impact Prediction
+Data-driven Decision Making
+⚠ Disclaimer
+
+This tool provides AI-based predictions for decision support only and should not be used as guaranteed financial advice.
+
+👨‍💻 Author
+
+Built by Mohammed Hamed
