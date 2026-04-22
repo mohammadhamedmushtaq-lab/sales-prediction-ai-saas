@@ -1,16 +1,54 @@
 import sqlite3
 
-def register(username, password):
-    conn = sqlite3.connect("users.db")
+import os
+
+DB_PATH = os.path.join(os.getcwd(), "users.db")
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("INSERT INTO users (username, password) VALUES (?,?)", (username, password))
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 
-def login(username, password):
-    conn = sqlite3.connect("users.db")
+
+def register(username, password):
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+
+    try:
+        cur.execute(
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (username, password)
+        )
+        conn.commit()
+        return "SUCCESS"
+
+    except sqlite3.IntegrityError:
+        return "USER_ALREADY_EXISTS"
+
+    finally:
+        conn.close()
+
+
+def login(username, password):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT * FROM users WHERE username=? AND password=?",
+        (username, password)
+    )
+
     user = cur.fetchone()
     conn.close()
+
     return user
