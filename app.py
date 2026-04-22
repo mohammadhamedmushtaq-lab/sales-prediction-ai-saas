@@ -3,6 +3,8 @@ import streamlit as st
 import joblib
 import pandas as pd
 from auth import register, login
+from auth import init_db
+init_db()   
 
 # ================= MODEL =================
 model = joblib.load("model.pkl")
