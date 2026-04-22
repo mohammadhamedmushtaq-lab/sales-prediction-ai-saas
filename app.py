@@ -1,8 +1,10 @@
+import os
 import streamlit as st
 import joblib
 import pandas as pd
 from auth import register, login
 
+# ================= MODEL =================
 model = joblib.load("model.pkl")
 
 st.set_page_config(page_title="AI Sales Decision System", layout="centered")
@@ -10,6 +12,10 @@ st.set_page_config(page_title="AI Sales Decision System", layout="centered")
 # ================= SESSION =================
 if "user" not in st.session_state:
     st.session_state.user = None
+
+# ================= INIT =================
+# ❌ IMPORTANT: koi register() yaha mat call karna
+# sirf DB init agar hai to yaha rakho (optional)
 
 # ================= LOGIN SYSTEM =================
 if st.session_state.user is None:
@@ -21,20 +27,33 @@ if st.session_state.user is None:
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
+    # ================= REGISTER =================
     if option == "Register":
         if st.button("Register"):
-            register(username, password)
-            st.success("Account created!")
+            if username and password:
+                result = register(username, password)
+                if result == "SUCCESS":
+                    st.success("Account created! 🚀")
+                elif result == "USER_ALREADY_EXISTS":
+                    st.error("User already exists!")
+                else:
+                    st.error("Registration failed!")
+            else:
+                st.warning("Fill username & password")
 
+    # ================= LOGIN =================
     if option == "Login":
         if st.button("Login"):
-            user = login(username, password)
-            if user:
-                st.session_state.user = username
-                st.success("Login successful 🚀")
-                st.rerun()
+            if username and password:
+                user = login(username, password)
+                if user:
+                    st.session_state.user = username
+                    st.success("Login successful 🚀")
+                    st.rerun()
+                else:
+                    st.error("Invalid login")
             else:
-                st.error("Invalid login")
+                st.warning("Fill username & password")
 
 # ================= MAIN APP =================
 else:
@@ -64,21 +83,28 @@ else:
 
         if st.button("🚀 Predict Sales Probability"):
 
-            data = pd.DataFrame([{
-                "price": price,
-                "marketing": marketing,
-                "discount": discount,
-                "category": category,
-                "customer_type": customer_type,
-                "month": month,
-                "competition_price": competition_price
-            }])
+            data = pd.DataFrame([[
+                price,
+                marketing,
+                discount,
+                category,
+                customer_type,
+                month,
+                competition_price
+            ]], columns=[
+                "price",
+                "marketing",
+                "discount",
+                "category",
+                "customer_type",
+                "month",
+                "competition_price"
+            ])
 
             prob = model.predict_proba(data)[0][1]
             confidence = round(prob * 100, 1)
 
             st.divider()
-
             st.subheader("📊 Business Insight")
 
             st.write(f"📊 Sales Probability Score: **{confidence}%**")
@@ -91,9 +117,8 @@ else:
                 st.error("🔴 Low Market Fit (Risky Product)")
 
             st.divider()
-
             st.info("📊 Model: Random Forest Classifier")
-            st.info("⚡ Output: Probability-based decision support system")
+            st.info("⚡ Output: Probability-based decision system")
 
     # ================= TAB 2 =================
     with tab2:
@@ -105,8 +130,19 @@ else:
         if uploaded:
             df = pd.read_csv(uploaded)
 
-            preds = model.predict(df)
-            df["Prediction"] = preds
+            required_cols = [
+                "price",
+                "marketing",
+                "discount",
+                "category",
+                "customer_type",
+                "month",
+                "competition_price"
+            ]
+
+            df = df[required_cols]
+
+            df["Prediction"] = model.predict(df)
 
             st.dataframe(df)
 
@@ -121,17 +157,17 @@ else:
 
     # ================= CHARTS =================
     st.divider()
-
     st.subheader("📊 Dataset Insights")
 
-    df = pd.read_csv("data.csv")
-    st.bar_chart(df["target"].value_counts())
+    if os.path.exists("data.csv"):
+        df_chart = pd.read_csv("data.csv")
+        if "target" in df_chart.columns:
+            st.bar_chart(df_chart["target"].value_counts())
+        else:
+            st.warning("target column missing")
+    else:
+        st.warning("No dataset found")
 
-    # ================= DISCLAIMER =================
+    # ================= FOOTER =================
     st.divider()
-
-    st.caption(
-        "⚠ This tool provides AI-based probability insights and should be used as decision support, not financial advice."
-    )
-
     st.caption("⚡ AI Sales Decision SaaS | Built by You")
