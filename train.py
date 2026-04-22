@@ -15,6 +15,7 @@ model = RandomForestClassifier(
 
 model.fit(X, y)
 
-joblib.dump(model, "model.pkl")
+feature_names = X.columns.tolist()
+joblib.dump(feature_names, "features.pkl")
 
 print("✅ Stable sellable model trained")
