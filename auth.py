@@ -1,8 +1,6 @@
 import sqlite3
 
-import os
-
-DB_PATH = os.path.join(os.getcwd(), "users.db")
+DB_PATH = "users.db"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -35,6 +33,9 @@ def register(username, password):
     except sqlite3.IntegrityError:
         return "USER_ALREADY_EXISTS"
 
+    except Exception as e:
+        return str(e)   # 🔥 important for debugging
+
     finally:
         conn.close()
 
@@ -50,5 +51,4 @@ def login(username, password):
 
     user = cur.fetchone()
     conn.close()
-
     return user
